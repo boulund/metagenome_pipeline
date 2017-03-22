@@ -1,11 +1,10 @@
 #!/usr/bin/env nextflow
 /****************************************
- * CTMR metagenomics read QA workflow
+ * CTMR Wellness metagenomics read QA workflow
  * Copyright (c) Authors 2017 
  * Authors:
  *  Fredrik Boulund <fredrik.boulund@ki.se>
  ****************************************/
-version = '0.1a'
 
 params.input_reads = '' // Specify on command line
 params.outdir = '.'
@@ -51,8 +50,8 @@ process bbduk {
         in1=${reads[0]} \
         in2=${reads[1]} \
         ref=${params.bbduk_ref} \
-        out1=${reads[0].baseName}.fq.gz \
-        out2=${reads[1].baseName}.fq.gz \
+        out1=${pair_id}_1.fq.gz \
+        out2=${pair_id}_2.fq.gz \
         stats=${pair_id}.stats.txt.gz \
         bhist=${pair_id}.bhist.txt.gz \
         qhist=${pair_id}.qhist.txt.gz \
