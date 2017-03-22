@@ -5,16 +5,17 @@
  * Authors:
  *  Fredrik Boulund <fredrik.boulund@ki.se>
  ****************************************/
+version = '0.2a'
 
 params.input_reads = '' // Specify on command line
 params.outdir = '.'
-params.bbduk_minlen = 25
+params.bbduk_minlen = 75
 params.bbduk_qtrim = 'rl'
-params.bbduk_trimq = 10
+params.bbduk_trimq = 20
 params.bbduk_ktrim = 'r'
 params.bbduk_k = 25
 params.bbduk_mink = 11
-params.bbduk_ref = '/proj/b2016371/src/bbmap/resources/adapters.fa'
+params.bbduk_adapters = '/home/ctmr/src/bbmap/resources/adapters.fa'
 params.bbduk_hdist = 1
 
 Channel
@@ -34,8 +35,8 @@ process bbduk {
     set pair_id, file(reads) from input_reads_bbduk
 
     output:
-    file "${reads[0].baseName}.fq.gz" 
-    file "${reads[1].baseName}.fq.gz" 
+    file "${pair_id}_1.fq.gz" 
+    file "${pair_id}_2.fq.gz" 
     file "${pair_id}.stats.txt.gz"
     file "${pair_id}.bhist.txt.gz"
     file "${pair_id}.qhist.txt.gz"
