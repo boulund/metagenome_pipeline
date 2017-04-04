@@ -25,7 +25,8 @@ Channel
 
 process bbduk {
     tag {pair_id}
-    publishDir "${params.outdir}/qa_reads", mode: 'copy'
+    publishDir "${params.outdir}/qa_reads/", 
+    saveAs: {filename -> filename.endsWith(".txt.gz") ? "stats/$filename" : "$filename"}, mode: 'copy'
 
     cpus 4
     memory 32.GB
@@ -50,7 +51,7 @@ process bbduk {
     bbduk.sh \
         in1=${reads[0]} \
         in2=${reads[1]} \
-        ref=${params.bbduk_ref} \
+        ref=${params.bbduk_adapters} \
         out1=${pair_id}_1.fq.gz \
         out2=${pair_id}_2.fq.gz \
         stats=${pair_id}.stats.txt.gz \
@@ -61,6 +62,7 @@ process bbduk {
         bqhist=${pair_id}.bqhist.txt.gz \
         lhist=${pair_id}.lhist.txt.gz \
         gchist=${pair_id}.gchist.txt.gz \
+        statsfile=${pair_id}.statsfile.txt.gz \
         minlen=${params.bbduk_minlen} \
         qtrim=${params.bbduk_qtrim} \
         trimq=${params.bbduk_trimq} \
