@@ -1,24 +1,22 @@
 #!/usr/bin/env nextflow
 /****************************************
- * Prototype CTMR metagenomics workflow
+ * Wellness metagenomics profiling workflow 
  * Copyright (c) Authors 2017 
  * Authors:
  *  Fredrik Boulund <fredrik.boulund@ki.se>
  ****************************************/
-version = '0.1a'
+version = '0.9b1'
 
 // Create file objects
 kaiju_db = file(params.kaiju_db)
 kaiju_nodes = file(params.kaiju_nodes)
 kaiju_names = file(params.kaiju_names)
-bracken_kmer_distribution = file(params.bracken_kmer_distribution)
 
 // Channels with paired input reads
 Channel
     .fromFilePairs(params.input_reads)
     .ifEmpty{ exit 1, "Found no input reads, did you specify --input_reads? I got: '${params.input_reads}'"}
     .into {input_reads_kaiju;
-           input_reads_kraken;
            input_reads_bbmap;
            input_reads_paladin}
 
@@ -59,117 +57,29 @@ process kaiju {
     """
 } 
 
-
-process kraken {
-    tag {pair_id}
-    publishDir "${params.outdir}/kraken", mode: 'copy'
-
-    input:
-    set pair_id, file(reads) from input_reads_kraken
-
-    output:
-    file "${pair_id}.kraken" into kraken_output
-    file "${pair_id}.kraken.report" into kraken_report
-
-    """
-    if [[ "${reads[0]}" == *.gz ]]
-    then
-        kraken \
-            --preload \
-            --db ${params.kraken_db} \
-            --threads ${task.cpus} \
-            --paired \
-            --gzip-compressed \
-            --fastq-input \
-            ${reads[0]} \
-            ${reads[1]} \
-            --output ${pair_id}.kraken
-    else
-        kraken \
-            --preload \
-            --db ${params.kraken_db} \
-            --threads ${task.cpus} \
-            --paired \
-            ${reads[0]} \
-            ${reads[1]} \
-            --output ${pair_id}.kraken
-    fi
-    kraken-report \
-        --db ${params.kraken_db} \
-        --show-zeros \
-        ${pair_id}.kraken \
-        > ${pair_id}.kraken.report
-    """
-}
-
-
-process bracken {
-    tag {report}
-    publishDir "${params.outdir}/bracken", mode: 'copy'
-    
-    input:
-    file report from kraken_report
-    file "kmer_distribution.txt" from bracken_kmer_distribution
-    
-    output:
-    file "${report.baseName}.bracken"
-    
-    """
-    bracken_estimate_abundance.py \
-        -i ${report} \
-        -k kmer_distribution.txt \
-        -l ${params.bracken_classification_level} \
-        -t ${params.bracken_threshold} \
-        -o ${report.baseName}.bracken
-    """
-}
-
-
-process merge_kaiju_kraken {
-    tag {kaiju_taxcomp.baseName}
-    publishDir "${params.outdir}/merged_taxonomic_classifications", mode: 'copy'
-
-    input:
-    file kaiju_taxcomp from kaiju_output
-    file kraken_taxcomp from kraken_output
-
-    output:
-    file "${kaiju_taxcomp.baseName}.merged_classifications.tab" into merged_kaiju_kraken
-
-    """
-    merge_taxonomic_classifications.py \
-        --kaiju $kaiju_taxcomp \
-        --kraken $kraken_taxcomp \
-        --merge-order ${params.taxonomic_merge_order} \
-        --dbfile merged_classifications.sqlite3 \
-        --output ${kaiju_taxcomp.baseName}.merged_classifications.tab 
-    """
-}
-
-
 process summarize_taxonomic_profile {
     tag {merged_taxonomic_profiles.baseName}
     publishDir "${params.outdir}/taxonomic_profiles", mode: 'copy'
 
     input:
-    file merged_taxonomic_profiles from merged_kaiju_kraken
+    file taxonomic_profiles from kaiju_output
     file nodes from kaiju_nodes
     file names from kaiju_names
 
     output:
-    file "${merged_taxonomic_profiles.baseName}.krona"
-    file "${merged_taxonomic_profiles.baseName}.krona.html"
-    file "${merged_taxonomic_profiles.baseName}.summary.{family,genus,species}"
+    file "${taxonomic_profiles.baseName}.krona"
+    file "${taxonomic_profiles.baseName}.krona.html"
+    file "${taxonomic_profiles.baseName}.summary.{family,genus,species}"
 
     """
     kaiju2krona \
         -t $nodes \
         -n $names \
-        -i $merged_taxonomic_profiles \
-        -o ${merged_taxonomic_profiles.baseName}.krona
+        -i $taxonomic_profiles \
+        -o ${taxonomic_profiles.baseName}.krona
     ktImportText \
-        -o ${merged_taxonomic_profiles.baseName}.krona.html \
-        ${merged_taxonomic_profiles.baseName}.krona
+        -o ${taxonomic_profiles.baseName}.krona.html \
+        ${taxonomic_profiles.baseName}.krona
     for rank in family genus species; do
         kaijuReport \
             -t $nodes \
