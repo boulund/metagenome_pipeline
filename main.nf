@@ -17,8 +17,7 @@ Channel
     .fromFilePairs(params.input_reads)
     .ifEmpty{ exit 1, "Found no input reads, did you specify --input_reads? I got: '${params.input_reads}'"}
     .into {input_reads_kaiju;
-           input_reads_bbmap;
-           input_reads_paladin}
+           input_reads_bbmap}
 
 /****************************************
  *    TAXONOMIC COMPOSITION ESTIMATION
@@ -120,24 +119,3 @@ process bbmap_igc {
     """
 }
 
-
-process paladin_uniprot {
-    tag {pair_id}
-    publishDir "${params.outdir}/paladin", mode: 'copy'
-
-    input:
-    set pair_id, file(reads) from input_reads_paladin
-
-    output:
-    file "${pair_id}.sam"
-    file "${pair_id}_uniprot.tsv"
-
-    """
-    zcat ${reads} > all_reads.fastq
-    paladin align \
-        -t ${task.cpus} \
-        -o ${pair_id} \
-        ${params.paladin_db} \
-        all_reads.fastq
-    """
-}
