@@ -115,7 +115,7 @@ process bbmap_igc {
         scafstats=${pair_id}.scafstats.txt.gz \
         statsfile=${pair_id}.mapping_stats.txt.gz \
 		covstats=${pair_id}.covstats.txt.gz \
-		rpkm=${pair_id}.rpkm.txt.gz \
+		rpkm=${pair_id}.rpkm.txt.gz 
     """
 }
 
