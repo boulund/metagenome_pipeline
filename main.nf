@@ -90,32 +90,3 @@ process summarize_taxonomic_profile {
     """
 }
 
-process bbmap_igc {
-    tag {pair_id}
-    publishDir "${params.outdir}/IGC", mode: 'copy'
-
-    input:
-    set pair_id, file(reads) from input_reads_bbmap
-
-    output:
-    file "${pair_id}.scafstats.txt.gz" 
-    file "${pair_id}.mapping_stats.txt.gz"
-    file "${pair_id}.rpkm.txt.gz"
-    file "${pair_id}.covstats.txt.gz"
-    file "${pair_id}.sam.gz"
-
-    """
-    bbmap.sh \
-        minid=${params.bbmap_minid} \
-        threads=${task.cpus} \
-        path=${params.bbmap_igc_dir} \
-        in1=${reads[0]} \
-        in2=${reads[1]} \
-        out=${pair_id}.sam.gz \
-        scafstats=${pair_id}.scafstats.txt.gz \
-        statsfile=${pair_id}.mapping_stats.txt.gz \
-		covstats=${pair_id}.covstats.txt.gz \
-		rpkm=${pair_id}.rpkm.txt.gz 
-    """
-}
-
