@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 /****************************************
- * Wellness metagenomics profiling workflow 
+ * Metagenomics profiling workflow 
  * Copyright (c) Authors 2017 
  * Authors:
  *  Fredrik Boulund <fredrik.boulund@ki.se>
